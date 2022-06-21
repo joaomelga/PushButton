@@ -5,7 +5,7 @@
 #include <Arduino.h>
 
 #define MIN_INTERVAL_BETWEEN_READINGS 5
-#define READINGS_BUFFER_SIZE 10
+#define READINGS_BUFFER_SIZE 2
 
 class Switch {
    private:

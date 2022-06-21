@@ -19,7 +19,7 @@ void Switch::read() {
     float crudeReadingsAvg;
     uint8_t crudeReadingsSum = 0;
 
-    if (millis() - _lastReadingTimeRef < MIN_INTERVAL_BETWEEN_READINGS) return;
+    // if (millis() - _lastReadingTimeRef < MIN_INTERVAL_BETWEEN_READINGS) return;
 
     _crudeReadingsBuffer[_currentBufferPosition] = isActive();
 
@@ -43,7 +43,7 @@ void Switch::read() {
 
     _previousBufferPosition = _currentBufferPosition;
     _currentBufferPosition = (_currentBufferPosition + 1) % READINGS_BUFFER_SIZE;
-    _lastReadingTimeRef = millis();
+    // _lastReadingTimeRef = millis();
 }
 
 int Switch::pressed() {
@@ -74,8 +74,9 @@ uint8_t Switch::clicked() {
 }
 
 uint8_t Switch::holded(uint32_t timeInMs) {
-    if (_pressedFlag && (millis() - _holdingTimeRef > timeInMs)) {
+    if (_pressedFlag && (millis() - _holdingTimeRef > timeInMs) && !_holdedFlag) {
         _holdedFlag = 1;
+        _holdingTimeRef = millis();
         return 1;
     } else
         return 0;
@@ -84,7 +85,8 @@ uint8_t Switch::holded(uint32_t timeInMs) {
 uint8_t Switch::isActive() {
     if ((_activatedOn == HIGH && digitalRead(_pin)) || (_activatedOn == LOW && !digitalRead(_pin)))
         return 1;
-
+    else if (_activatedOn > HIGH && analogRead(_pin) > _activatedOn)
+        return 1;
     else
         return 0;
 }
