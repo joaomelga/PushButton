@@ -1,13 +1,13 @@
 #include <PushButton.h>
 
-Switch::Switch(char* name, int pin, int activatedOn, uint8_t mode) {
+Switch::Switch(char* name, uint8_t pin, int activatedOn, uint8_t mode) {
     _name = name;
     _pin = pin;
     _activatedOn = activatedOn;
     pinMode(pin, mode);
 }
 
-int Switch::getPin() {
+uint8_t Switch::getPin() {
     return _pin;
 }
 
@@ -16,37 +16,23 @@ char* Switch::getName() {
 }
 
 void Switch::read() {
-    float crudeReadingsAvg;
-    uint8_t crudeReadingsSum = 0;
+    _momentaryState = isActive();
+    _previousStateFiltered = _currentStateFiltered;
+    _currentStateFiltered = _currentStateFiltered * 0.9 + _momentaryState * 0.1;
 
-    // if (millis() - _lastReadingTimeRef < MIN_INTERVAL_BETWEEN_READINGS) return;
-
-    _crudeReadingsBuffer[_currentBufferPosition] = isActive();
-
-    for (uint8_t i = 0; i < READINGS_BUFFER_SIZE; i++) crudeReadingsSum += _crudeReadingsBuffer[i];
-
-    crudeReadingsAvg = (float)crudeReadingsSum / (float)READINGS_BUFFER_SIZE;
-    _avgReadingsBuffer[_currentBufferPosition] = (crudeReadingsAvg > 0.5) ? 1 : 0;
-
-    if (_avgReadingsBuffer[_previousBufferPosition] != _avgReadingsBuffer[_currentBufferPosition]) {
-        if (_avgReadingsBuffer[_currentBufferPosition] > _avgReadingsBuffer[_previousBufferPosition]) {
-            _pressedFlag = 1;
-            _unpressedFlag = 0;
-            _holdingTimeRef = millis();
-        } else {
-            _pressedFlag = 0;
-            _unpressedFlag = 1;
-            _clickedFlag = !_holdedFlag;
-            _holdedFlag = 0;
-        }
+    if (_currentStateFiltered > 0.5 && _previousStateFiltered <= 0.5) {
+        _pressedFlag = 1;
+        _unpressedFlag = 0;
+        _holdingTimeRef = millis();
+    } else if (_currentStateFiltered <= 0.5 && _previousStateFiltered > 0.5) {
+        _pressedFlag = 0;
+        _unpressedFlag = 1;
+        _clickedFlag = !_holdedFlag;
+        _holdedFlag = 0;
     }
-
-    _previousBufferPosition = _currentBufferPosition;
-    _currentBufferPosition = (_currentBufferPosition + 1) % READINGS_BUFFER_SIZE;
-    // _lastReadingTimeRef = millis();
 }
 
-int Switch::pressed() {
+uint8_t Switch::pressed() {
     if (_pressedFlag) {
         _pressedFlag = 0;
         return 1;
@@ -55,7 +41,7 @@ int Switch::pressed() {
     return 0;
 }
 
-int Switch::unpressed() {
+uint8_t Switch::unpressed() {
     if (_unpressedFlag) {
         _unpressedFlag = 0;
         return 1;
