@@ -1,4 +1,4 @@
-#include <PushButton.h>
+#include "PushButton.h"
 
 Switch::Switch(char* name, uint8_t pin, int activatedOn, uint8_t mode) {
     _name = name;
